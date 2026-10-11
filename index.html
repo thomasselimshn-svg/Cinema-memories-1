@@ -1,0 +1,486 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Cinema Memories</title>
+<meta name="theme-color" content="#060606">
+<meta name="description" content="Transforme tes souvenirs de cinéma en tickets à imprimer.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=Figtree:wght@400;600&family=Limelight&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+/* ===== Couleurs : modifie ici pour changer le design du site ===== */
+:root{--noir:#060606;--rouge:#c8102e;--os:#f1ead9;--gris:#1d1b1b;--gris2:#2c2929}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:var(--noir);color:var(--os);font:17px/1.5 Figtree,system-ui,sans-serif;min-height:100vh;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
+.scr{display:none;max-width:520px;margin:0 auto;padding:20px 18px 48px}
+.scr.on{display:block;animation:in .4s ease}
+@keyframes in{from{opacity:0;transform:translateY(10px)}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+h1,h2{font-family:Limelight,Georgia,serif;font-weight:400;line-height:1.1;margin:0 0 .4em}
+h1{font-size:clamp(2.5rem,12.5vw,3.7rem)}h2{font-size:2rem}
+h1:focus,h2:focus{outline:0}
+.marquee{border:2px solid var(--os);background:var(--gris);padding:34px 20px 26px;position:relative;text-align:center}
+.marquee::before{content:"";position:absolute;inset:7px;border:6px dotted var(--rouge);pointer-events:none}
+.tag{font-style:italic;font-size:1.15rem;margin:.2em 0 0}
+.tk{background:var(--os);color:#111;margin:26px auto 4px;max-width:300px;padding:16px 14px;font-family:'Courier Prime',monospace;text-align:center;transform:rotate(-2deg);
+-webkit-mask:radial-gradient(circle 9px at 0 50%,#0000 97%,#000) left/51% 100% no-repeat,radial-gradient(circle 9px at 100% 50%,#0000 97%,#000) right/51% 100% no-repeat;
+mask:radial-gradient(circle 9px at 0 50%,#0000 97%,#000) left/51% 100% no-repeat,radial-gradient(circle 9px at 100% 50%,#0000 97%,#000) right/51% 100% no-repeat;border-top:3px double #111;border-bottom:3px double #111}
+.tk b{display:block;font-size:1.25rem;letter-spacing:.04em}.tk span{color:var(--rouge);font-size:1.5rem}
+.sub{opacity:.8;margin:22px 0}
+.btn{display:block;width:100%;min-height:54px;border:2px solid var(--rouge);border-radius:3px;background:var(--rouge);color:var(--os);font:600 1.05rem Figtree,sans-serif;cursor:pointer;padding:13px;margin-top:12px;transition:transform .15s,background .15s}
+.btn:hover{background:#e0183a;border-color:#e0183a}.btn:active{transform:scale(.98)}
+.btn.alt{background:none;border-color:var(--os)}.btn.alt:hover{background:var(--gris2)}
+.btn.sm{min-height:44px;width:auto;display:inline-block;padding:8px 14px;font-size:.95rem}
+:focus-visible{outline:3px solid var(--os);outline-offset:3px}
+.step{font-size:.95rem;opacity:.75;margin:0 0 4px}
+label,.lbl{display:block;margin:18px 0 6px;font-weight:600}
+input[type=text],input[type=date],input[type=time],textarea{width:100%;font:inherit;font-size:16px;padding:12px;background:var(--gris2);color:var(--os);border:2px solid #4a4545;border-radius:3px;min-height:48px;color-scheme:dark}
+textarea{resize:vertical;min-height:90px}
+input:focus,textarea:focus{border-color:var(--rouge);outline:0}
+[aria-invalid=true]{border-color:#ff7a7a!important}
+.err{color:#ff9a9a;min-height:1.3em;margin:6px 0 0;font-size:.95rem}
+.hint{opacity:.7;font-size:.9rem;margin:6px 0 0}
+.pick{position:relative;display:block;text-align:center;border:2px dashed var(--os);padding:24px 12px;cursor:pointer;margin:0;font-weight:600;background:var(--gris)}
+.pick:hover{background:var(--gris2)}.pick input{position:absolute;opacity:0;width:1px;height:1px}
+.pick:focus-within{outline:3px solid var(--os);outline-offset:3px}
+canvas.pc{width:100%;display:block;border:2px solid var(--os);background:#fff;margin-top:10px}
+#cropCv{touch-action:none;cursor:grab}
+input[type=range]{width:100%;accent-color:var(--rouge);min-height:36px}
+.modes{display:flex;gap:8px}.modes button{flex:1;min-height:46px;background:var(--gris2);color:var(--os);border:2px solid #4a4545;border-radius:3px;font:inherit;cursor:pointer}
+.modes button[aria-pressed=true]{border-color:var(--rouge);background:var(--rouge)}
+.stars{display:flex;gap:2px;outline-offset:6px;width:max-content}
+.st{position:relative;display:inline-block;font-size:48px;line-height:1.1;color:#4a4545;cursor:pointer;user-select:none}
+.st i{position:absolute;left:0;top:0;overflow:hidden;color:var(--rouge);font-style:normal;width:0;white-space:nowrap}
+.row{display:flex;gap:10px}.row>div{flex:1}
+#pv{width:100%;max-width:340px;display:block;margin:18px auto;background:#fff;box-shadow:0 10px 36px #000,0 0 0 1px #333}
+details{background:var(--gris);padding:12px 16px;margin-top:22px;border-left:4px solid var(--rouge)}
+summary{font-weight:600;cursor:pointer;min-height:32px}
+details li{margin:6px 0}
+.note{font-size:.9rem;opacity:.75;margin-top:18px}
+.ok{color:#9fe0a8;min-height:1.3em;margin-top:8px}
+</style>
+</head>
+<body>
+
+<section id="home" class="scr on">
+  <div class="marquee">
+    <h1 tabindex="-1">Cinema Memories</h1>
+    <p class="tag">Chaque séance mérite son souvenir.</p>
+    <div class="tk" aria-hidden="true"><b>TICKET SOUVENIR</b>Séance du soir<br><span>★★★★½</span><br>CM-0001</div>
+  </div>
+  <p class="sub">Choisis une photo, raconte ta séance, puis télécharge un ticket PDF de 80 mm prêt à imprimer. Rien n'est envoyé ni enregistré : tout reste sur ton téléphone.</p>
+  <button class="btn" id="start">Créer mon ticket</button>
+</section>
+
+<section id="s1" class="scr">
+  <p class="step">Étape 1 sur 3 : la photo</p>
+  <h2 tabindex="-1">Ta photo</h2>
+  <label class="pick" id="pickLbl">Choisir une photo dans la galerie<input type="file" id="file" accept="image/*"></label>
+  <p class="hint">JPEG, PNG ou WebP. Sur iPhone, les photos HEIC sont converties automatiquement quand tu les choisis depuis Photos.</p>
+  <p class="ok" id="photoOk" role="status"></p>
+  <p class="err" id="photoErr" role="alert"></p>
+  <div id="crop" hidden>
+    <p class="lbl">Cadrage : glisse la photo pour la déplacer</p>
+    <canvas id="cropCv" class="pc" width="576" height="480" aria-label="Zone de cadrage de la photo"></canvas>
+    <label for="zoom">Zoom</label>
+    <input type="range" id="zoom" min="1" max="3" step="0.01" value="1">
+    <p class="lbl">Rendu sur papier thermique</p>
+    <canvas id="toneCv" class="pc" width="576" height="480" aria-label="Aperçu noir et blanc de la photo"></canvas>
+    <div class="modes" role="group" aria-label="Mode de traitement" style="margin-top:12px">
+      <button type="button" data-m="equilibre" aria-pressed="true">Équilibré</button>
+      <button type="button" data-m="contraste" aria-pressed="false">Contrasté</button>
+      <button type="button" data-m="clair" aria-pressed="false">Clair</button>
+    </div>
+    <label for="bri">Luminosité</label><input type="range" id="bri" min="-50" max="50" value="0">
+    <label for="con">Contraste</label><input type="range" id="con" min="-50" max="50" value="0">
+  </div>
+  <button class="btn" id="to2">Continuer</button>
+  <button class="btn alt" id="skip" type="button">Continuer sans photo</button>
+  <button class="btn alt" data-go="home" type="button">Retour</button>
+</section>
+
+<section id="s2" class="scr">
+  <p class="step">Étape 2 sur 3 : la séance</p>
+  <h2 tabindex="-1">Ta séance</h2>
+  <label for="title">Titre du film (obligatoire)</label>
+  <input type="text" id="title" maxlength="80" autocomplete="off" aria-describedby="titleErr" required>
+  <p class="err" id="titleErr" role="alert"></p>
+  <div class="row">
+    <div><label for="date">Date (obligatoire)</label><input type="date" id="date"></div>
+    <div><label for="time">Heure</label><input type="time" id="time"></div>
+  </div>
+  <p class="err" id="dateErr" role="alert"></p>
+  <label for="cinema">Nom du cinéma</label>
+  <input type="text" id="cinema" maxlength="60" autocomplete="off">
+  <span class="lbl">Note du film</span>
+  <div class="stars" id="stars" role="slider" tabindex="0" aria-label="Note du film" aria-valuemin="0" aria-valuemax="5" aria-valuenow="0"></div>
+  <p class="hint"><span id="rv">Pas de note</span>. Touche le côté gauche d'une étoile pour une demi-étoile.
+    <button type="button" class="btn alt sm" id="noRate" style="margin:0 0 0 6px">Effacer</button></p>
+  <label for="comment">Commentaire personnel</label>
+  <textarea id="comment" maxlength="160"></textarea>
+  <p class="hint"><span id="cc">0</span> / 160 caractères</p>
+  <label for="phrase">Petite phrase souvenir</label>
+  <input type="text" id="phrase" maxlength="80" value="Un souvenir de plus à garder précieusement.">
+  <p class="hint">Numéro du ticket : <b id="num"></b>. Il est tiré au hasard sur ton appareil, son unicité n'est pas garantie.</p>
+  <button class="btn" id="to3">Voir mon ticket</button>
+  <button class="btn alt" data-go="s1" type="button">Retour à la photo</button>
+</section>
+
+<section id="s3" class="scr">
+  <p class="step">Étape 3 sur 3 : l'aperçu</p>
+  <h2 tabindex="-1">Ton ticket</h2>
+  <canvas id="pv" aria-label="Aperçu du ticket"></canvas>
+  <p class="err" id="pdfErr" role="alert"></p>
+  <button class="btn" id="dl">Enregistrer mon PDF</button>
+  <p class="hint">Un menu s'ouvre : choisis « Enregistrer dans Fichiers » ou ton application d'impression.</p>
+  <p class="ok" id="pdfOk" role="status"></p>
+  <button class="btn alt" data-go="s2" type="button">Modifier mon ticket</button>
+  <button class="btn alt" id="reset" type="button">Recommencer</button>
+  <details open>
+    <summary>Comment l'imprimer</summary>
+    <ol>
+      <li>Enregistre le PDF dans Fichiers.</li>
+      <li>Ouvre-le dans Fichiers ou dans l'application de ton imprimante.</li>
+      <li>Choisis l'imprimante Bluetooth déjà associée.</li>
+      <li>Si l'application le demande, règle le papier sur 80 mm.</li>
+      <li>Vérifie que l'échelle est à 100 % (pas d'ajustement à une page A4).</li>
+      <li>Lance l'impression.</li>
+    </ol>
+    <p class="hint">Ce site ne se connecte pas à l'imprimante : il fournit un PDF standard. Le résultat dépend de l'application et du modèle d'imprimante.</p>
+  </details>
+  <p class="note">Ton ticket n'est sauvegardé nulle part. Télécharge ton PDF avant de quitter cette page si tu veux le garder.</p>
+</section>
+
+<script>
+/* ===== Réglages du ticket : modifie ici si besoin ===== */
+const CFG={
+  paperMm:80,      // largeur du rouleau
+  contentMm:72,    // largeur réellement imprimée (réduis à 68-70 si les bords sont coupés)
+  marginMm:3,      // marge en haut et en bas du PDF
+  pxPerMm:8,       // résolution de conception (8 = 203 dpi, standard des imprimantes thermiques)
+  scale:2,         // finesse du texte dans le PDF
+  photoRatioH:480, // hauteur de la photo (largeur = 576)
+  brand:'CINEMA MEMORIES',sub:'TICKET SOUVENIR'
+};
+const W=CFG.contentMm*CFG.pxPerMm,PH=CFG.photoRatioH;
+const $=s=>document.querySelector(s);
+const MONO='"Courier Prime",Courier,monospace';
+const newNum=()=>'CM-'+String(Math.floor(Math.random()*9000)+1000);
+const fmt=v=>String(v).replace('.',',');
+const today=()=>new Date(Date.now()-new Date().getTimezoneOffset()*6e4).toISOString().slice(0,10);
+const S={img:null,zoom:1,cx:.5,cy:.5,mode:'equilibre',rating:0,number:newNum(),ticket:null};
+
+function show(id){
+  document.querySelectorAll('.scr').forEach(e=>e.classList.toggle('on',e.id===id));
+  scrollTo(0,0);
+  const h=document.querySelector('#'+id+' h1,#'+id+' h2');if(h)h.focus({preventScroll:true});
+  if(id==='s3')renderPreview();
+}
+document.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>show(b.dataset.go));
+$('#start').onclick=()=>show('s1');
+$('#to2').onclick=()=>{
+  if(!S.img){$('#photoErr').textContent="Choisis une photo, ou utilise « Continuer sans photo ».";return}
+  show('s2');
+};
+$('#skip').onclick=()=>{S.img=null;$('#crop').hidden=true;$('#file').value='';$('#photoErr').textContent=$('#photoOk').textContent='';show('s2')};
+
+/* ----- Photo ----- */
+const cv=$('#cropCv');
+const MAX_SIDE=2400; /* les grandes photos sont réduites ici : évite de saturer la mémoire de l'iPhone */
+function decodeBlob(b){
+  return new Promise((ok,ko)=>{
+    const u=URL.createObjectURL(b),im=new Image();
+    im.onload=()=>{im._u=u;ok(im)};
+    im.onerror=()=>{URL.revokeObjectURL(u);ko(new Error('image non décodée'))};
+    im.src=u;
+  });
+}
+function decodeDataUrl(b){
+  return new Promise((ok,ko)=>{
+    const r=new FileReader();
+    r.onload=()=>{const im=new Image();im.onload=()=>ok(im);im.onerror=()=>ko(new Error('image non décodée'));im.src=r.result};
+    r.onerror=()=>ko(new Error('fichier non lisible'));
+    r.readAsDataURL(b);
+  });
+}
+/* Copie l'image dans un canvas : le navigateur applique l'orientation EXIF de l'iPhone et réduit la taille. */
+function toCanvas(im){
+  const w=im.naturalWidth||im.width,h=im.naturalHeight||im.height;
+  try{
+    if(!w||!h)throw new Error('image vide');
+    const k=Math.min(1,MAX_SIDE/Math.max(w,h)),c=document.createElement('canvas');
+    c.width=Math.round(w*k);c.height=Math.round(h*k);
+    const x=c.getContext('2d');if(!x)throw new Error('canvas indisponible');
+    x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);x.drawImage(im,0,0,c.width,c.height);
+    return c;
+  }finally{if(im._u)URL.revokeObjectURL(im._u);if(im.close)im.close();else im.src=''}
+}
+/* Trois méthodes de lecture successives : on passe à la suivante si une échoue. */
+async function tryDecoders(f){
+  const errs=[];
+  for(const [n,fn] of [['url',()=>decodeBlob(f)],['data',()=>decodeDataUrl(f)],['bitmap',()=>createImageBitmap(f,{imageOrientation:'from-image'})]]){
+    try{return toCanvas(await fn())}catch(e){errs.push(n+' : '+((e&&e.message)||e))}
+  }
+  throw new Error(errs.join(' ; '));
+}
+async function looksHeic(f){
+  try{
+    const t=String.fromCharCode(...new Uint8Array(await f.slice(4,32).arrayBuffer()));
+    return /ftyp(heic|heix|hevc|hevx|mif1|msf1|heim|heis)/.test(t)||/hei[cf]/i.test(f.type+f.name);
+  }catch(e){return false}
+}
+function loadScript(src){
+  return new Promise((ok,ko)=>{const s=document.createElement('script');s.src=src;s.onload=ok;s.onerror=()=>ko(new Error('script'));document.head.appendChild(s)});
+}
+async function heicToJpeg(f){
+  if(!window.heic2any){
+    const srcs=['https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js','https://unpkg.com/heic2any@0.0.4/dist/heic2any.min.js','https://cdnjs.cloudflare.com/ajax/libs/heic2any/0.0.4/heic2any.min.js'];
+    for(const u of srcs){try{await loadScript(u);if(window.heic2any)break}catch(e){}}
+    if(!window.heic2any)throw new Error('convertisseur indisponible (vérifie ta connexion internet)');
+  }
+  const r=await window.heic2any({blob:f,toType:'image/jpeg',quality:.9});
+  return Array.isArray(r)?r[0]:r;
+}
+/* Si la lecture directe échoue et que le fichier est un HEIC, on le convertit en JPEG puis on relit. */
+async function readPhoto(f){
+  try{return await tryDecoders(f)}
+  catch(e1){
+    if(!(await looksHeic(f)))throw e1;
+    $('#photoOk').textContent='Conversion de la photo, un instant…';
+    let jpg;
+    try{jpg=await heicToJpeg(f)}
+    catch(e2){throw new Error(e1.message+' ; conversion : '+((e2&&(e2.message||e2.code))||e2))}
+    return await tryDecoders(jpg);
+  }
+}
+$('#file').onchange=async e=>{
+  const inp=e.target,f=inp.files[0];if(!f)return;
+  $('#photoErr').textContent='';$('#photoOk').textContent='Lecture de la photo…';
+  try{
+    S.img=await readPhoto(f);S.zoom=1;S.cx=S.cy=.5;$('#zoom').value=1;
+    $('#crop').hidden=false;$('#photoOk').textContent='Photo chargée.';refresh();
+  }catch(err){
+    console.error(err);$('#photoOk').textContent='';
+    $('#photoErr').textContent="Cette photo n'a pas pu être lue (format non reconnu ou fichier trop lourd). Détail : "+(err&&err.message||err)+". Choisis-en une autre avec le bouton ci-dessus. Sur iPhone, tu peux aussi régler Réglages > Appareil photo > Formats sur « Le plus compatible ».";
+  }
+  inp.value=''; /* permet de re-sélectionner la même photo */
+};
+function geom(){
+  const iw=S.img.width,ih=S.img.height,sc=Math.max(W/iw,PH/ih)*S.zoom;
+  const hw=W/2/(iw*sc),hh=PH/2/(ih*sc);
+  S.cx=Math.min(1-hw,Math.max(hw,S.cx));S.cy=Math.min(1-hh,Math.max(hh,S.cy));
+  return{iw,ih,sc};
+}
+function drawCrop(c){const{iw,ih,sc}=geom();c.drawImage(S.img,W/2-S.cx*iw*sc,PH/2-S.cy*ih*sc,iw*sc,ih*sc)}
+let drag=null,raf;
+cv.onpointerdown=e=>{drag={x:e.clientX,y:e.clientY};cv.setPointerCapture(e.pointerId)};
+cv.onpointermove=e=>{
+  if(!drag||!S.img)return;
+  const k=W/cv.getBoundingClientRect().width,{iw,ih,sc}=geom();
+  S.cx-=(e.clientX-drag.x)*k/(iw*sc);S.cy-=(e.clientY-drag.y)*k/(ih*sc);
+  drag={x:e.clientX,y:e.clientY};refresh();
+};
+cv.onpointerup=cv.onpointercancel=()=>{drag=null};
+$('#zoom').oninput=e=>{S.zoom=+e.target.value;refresh()};
+$('#bri').oninput=refresh;$('#con').oninput=refresh;
+document.querySelectorAll('.modes button').forEach(b=>b.onclick=()=>{
+  S.mode=b.dataset.m;document.querySelectorAll('.modes button').forEach(x=>x.setAttribute('aria-pressed',x===b));refresh();
+});
+function refresh(){
+  cancelAnimationFrame(raf);
+  raf=requestAnimationFrame(()=>{
+    if(!S.img)return;
+    const c=cv.getContext('2d');c.fillStyle='#fff';c.fillRect(0,0,W,PH);drawCrop(c);
+    $('#toneCv').getContext('2d').drawImage(photoBW(),0,0);
+  });
+}
+/* Niveaux de gris, étirement des contrastes, puis tramage Floyd-Steinberg (rendu fidèle en noir et blanc). */
+function photoBW(){
+  const c=document.createElement('canvas');c.width=W;c.height=PH;
+  const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,W,PH);drawCrop(x);
+  const d=x.getImageData(0,0,W,PH),p=d.data,n=W*PH,g=new Float32Array(n),h=new Uint32Array(256);
+  for(let i=0;i<n;i++){const v=.299*p[i*4]+.587*p[i*4+1]+.114*p[i*4+2];g[i]=v;h[v|0]++}
+  let lo=0,hi=255,a=0;
+  for(;lo<255&&a+h[lo]<n*.01;lo++)a+=h[lo];
+  a=0;for(;hi>0&&a+h[hi]<n*.01;hi--)a+=h[hi];
+  if(hi-lo<30){lo=0;hi=255}
+  const M={equilibre:[1,1.1],contraste:[1,1.5],clair:[.7,1.1]}[S.mode];
+  const k=M[1]*(1+$('#con').value/100),br=$('#bri').value/200;
+  for(let i=0;i<n;i++){
+    let v=Math.min(1,Math.max(0,(g[i]-lo)/(hi-lo)));
+    v=(Math.pow(v,M[0])-.5)*k+.5+br;g[i]=Math.min(1,Math.max(0,v))*255;
+  }
+  for(let y=0;y<PH;y++)for(let xx=0;xx<W;xx++){
+    const i=y*W+xx,o=g[i],q=o<128?0:255,e=o-q;g[i]=q;
+    if(xx<W-1)g[i+1]+=e*7/16;
+    if(y<PH-1){if(xx>0)g[i+W-1]+=e*3/16;g[i+W]+=e*5/16;if(xx<W-1)g[i+W+1]+=e/16}
+  }
+  for(let i=0;i<n;i++){p[i*4]=p[i*4+1]=p[i*4+2]=g[i];p[i*4+3]=255}
+  x.putImageData(d,0,0);return c;
+}
+
+/* ----- Formulaire ----- */
+$('#date').value=today();$('#num').textContent=S.number;
+$('#comment').oninput=e=>{$('#cc').textContent=e.target.value.length};
+const st=$('#stars');
+for(let i=0;i<5;i++)st.insertAdjacentHTML('beforeend','<span class="st">★<i>★</i></span>');
+function setR(v){
+  S.rating=Math.min(5,Math.max(0,v));
+  [...st.children].forEach((s,i)=>s.lastChild.style.width=Math.max(0,Math.min(1,S.rating-i))*100+'%');
+  const t=S.rating?fmt(S.rating)+' / 5':'Pas de note';
+  st.setAttribute('aria-valuenow',S.rating);st.setAttribute('aria-valuetext',t);$('#rv').textContent=t;
+}
+st.onclick=e=>{
+  const s=e.target.closest('.st');if(!s)return;
+  const r=s.getBoundingClientRect();
+  setR([...st.children].indexOf(s)+(e.clientX-r.left<r.width/2?.5:1));
+};
+st.onkeydown=e=>{
+  if(/Arrow(Right|Up)/.test(e.key)){setR(S.rating+.5);e.preventDefault()}
+  if(/Arrow(Left|Down)/.test(e.key)){setR(S.rating-.5);e.preventDefault()}
+};
+$('#noRate').onclick=()=>setR(0);
+$('#to3').onclick=()=>{
+  let ok=true;
+  const t=$('#title'),d=$('#date');
+  t.setAttribute('aria-invalid',!t.value.trim());$('#titleErr').textContent=t.value.trim()?'':'Indique le titre du film.';
+  d.setAttribute('aria-invalid',!d.value);$('#dateErr').textContent=d.value?'':'Indique la date de la séance.';
+  if(!t.value.trim()){t.focus();ok=false}else if(!d.value){d.focus();ok=false}
+  if(ok)show('s3');
+};
+
+/* ----- Dessin du ticket (même image pour l'aperçu et le PDF) ----- */
+async function makeTicket(){
+  await Promise.all(['40px Limelight','700 20px "Courier Prime"','italic 20px "Courier Prime"'].map(f=>document.fonts.load(f)));
+  const SC=CFG.scale,H=5000,c=document.createElement('canvas');
+  c.width=W*SC;c.height=H*SC;
+  const x=c.getContext('2d');x.scale(SC,SC);x.fillStyle='#fff';x.fillRect(0,0,W,H);
+  x.fillStyle=x.strokeStyle='#000';x.textAlign='center';
+  let y=8;
+  const line=(t,f,lh)=>{x.font=f;x.fillText(t,W/2,y+lh*.78);y+=lh};
+  const wrap=(t,f,mw)=>{
+    x.font=f;const out=[];let l='';
+    t.replace(/\s+/g,' ').trim().split(' ').forEach(w=>{
+      while(x.measureText(w).width>mw){
+        let i=w.length;while(i>1&&x.measureText(w.slice(0,i)).width>mw)i--;
+        if(l){out.push(l);l=''}out.push(w.slice(0,i));w=w.slice(i);
+      }
+      const t2=l?l+' '+w:w;
+      if(l&&x.measureText(t2).width>mw){out.push(l);l=w}else l=t2;
+    });
+    if(l)out.push(l);return out;
+  };
+  const dots=()=>{for(let i=8;i<W;i+=16){x.beginPath();x.arc(i,y+3,3,0,7);x.fill()}y+=16};
+  const strip=()=>{x.fillRect(0,y,W,22);x.fillStyle='#fff';for(let i=6;i<W-8;i+=18)x.fillRect(i,y+7,10,8);x.fillStyle='#000';y+=34};
+  const dash=()=>{x.save();x.setLineDash([6,5]);x.lineWidth=2;x.beginPath();x.moveTo(8,y);x.lineTo(W-8,y);x.stroke();x.restore();y+=18};
+  const star=(cx,cy,r,fill)=>{
+    x.beginPath();
+    for(let i=0;i<10;i++){const a=-Math.PI/2+i*Math.PI/5,rr=i%2?r*.42:r;x.lineTo(cx+rr*Math.cos(a),cy+rr*Math.sin(a))}
+    x.closePath();x.lineWidth=2.5;x.stroke();
+    if(fill>0){x.save();x.clip();x.fillRect(cx-r,cy-r,2*r*fill,2*r);x.restore()}
+  };
+  const title=$('#title').value.trim(),dv=$('#date').value,tv=$('#time').value,
+        cin=$('#cinema').value.trim(),com=$('#comment').value.trim(),ph=$('#phrase').value.trim();
+
+  dots();y+=6;
+  line(CFG.brand,'38px Limelight, Georgia, serif',46);
+  line(CFG.sub.split('').join(' '),'700 17px '+MONO,24);y+=6;
+  strip();
+  if(S.img){
+    const w=W-16,h=w*PH/W;
+    x.lineWidth=3;x.strokeRect(6.5,y-1.5,w+3,h+3);
+    x.imageSmoothingEnabled=false;x.drawImage(photoBW(),8,y,w,h);x.imageSmoothingEnabled=true;
+    y+=h+16;strip();
+  }
+  let lines=[],fs=44;
+  for(const s of [44,38,32,27]){fs=s;lines=wrap(title.toUpperCase(),'700 '+s+'px '+MONO,W-24);if(lines.length<=3)break}
+  lines.slice(0,4).forEach(l=>line(l,'700 '+fs+'px '+MONO,fs*1.15));
+  y+=6;dash();
+  const [Y,Mo,D]=dv.split('-').map(Number);
+  const ds=new Date(Y,Mo-1,D).toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long',year:'numeric'}).toUpperCase();
+  wrap(ds,'700 25px '+MONO,W-16).forEach(l=>line(l,'700 25px '+MONO,32));
+  if(tv)line('À '+tv.replace(':','H'),'700 25px '+MONO,32);
+  if(cin)wrap(cin.toUpperCase(),'22px '+MONO,W-16).forEach(l=>line(l,'22px '+MONO,28));
+  if(S.rating>0){
+    y+=10;
+    for(let i=0;i<5;i++)star((W-230)/2+23+i*46,y+22,20,Math.max(0,Math.min(1,S.rating-i)));
+    y+=50;line(fmt(S.rating)+' / 5','700 26px '+MONO,32);
+  }
+  if(com||ph){y+=6;dash()}
+  if(com)wrap('« '+com+' »','italic 22px '+MONO,W-24).forEach(l=>line(l,'italic 22px '+MONO,28));
+  if(com&&ph)y+=8;
+  if(ph)wrap(ph,'20px '+MONO,W-24).forEach(l=>line(l,'20px '+MONO,26));
+  y+=12;
+  let seed=0;for(const ch of S.number+title)seed=(seed*31+ch.charCodeAt(0))>>>0;
+  for(let bx=(W-300)/2;bx<(W+300)/2;){
+    seed=(seed*1103515245+12345)>>>0;const bw=2+(seed>>>8)%4;
+    x.fillRect(bx,y,bw,46);bx+=bw+2+(seed>>>12)%3;
+  }
+  y+=54;line('N° '+S.number,'700 20px '+MONO,26);y+=8;
+  dash();line('- - - - - - - - - - -','18px '+MONO,20);dots();y+=4;
+
+  const out=document.createElement('canvas');out.width=W*SC;out.height=Math.ceil(y*SC);
+  out.getContext('2d').drawImage(c,0,0);
+  return out;
+}
+async function renderPreview(){
+  $('#pdfErr').textContent='';$('#pdfOk').textContent='';
+  try{
+    S.ticket=await makeTicket();
+    const pv=$('#pv');pv.width=S.ticket.width;pv.height=S.ticket.height;pv.getContext('2d').drawImage(S.ticket,0,0);prepPdf();
+  }catch(e){console.error(e);$('#pdfErr').textContent="L'aperçu n'a pas pu être créé. Retourne modifier ton ticket et réessaie."}
+}
+
+/* ----- PDF ----- */
+async function makePdf(){
+  if(!window.jspdf)throw new Error('jspdf');
+  const t=S.ticket||await makeTicket();
+  const mm=CFG.contentMm/t.width,h=t.height*mm;
+  const doc=new window.jspdf.jsPDF({unit:'mm',format:[CFG.paperMm,h+2*CFG.marginMm],orientation:'portrait'});
+  doc.addImage(t.toDataURL('image/png'),'PNG',(CFG.paperMm-CFG.contentMm)/2,CFG.marginMm,CFG.contentMm,h,undefined,'FAST');
+  const slug=$('#title').value.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-zA-Z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,40)||'Ticket';
+  return{doc,name:'Cinema-Memories-'+slug+'-'+$('#date').value+'.pdf'};
+}
+async function run(fn){
+  $('#pdfErr').textContent='';$('#pdfOk').textContent='';
+  const b=$('#dl');b.disabled=true;b.textContent='Création du PDF…';
+  try{await fn()}
+  catch(e){
+    console.error(e);
+    $('#pdfErr').textContent=window.jspdf?"Le PDF n'a pas pu être créé. Réessaie, ou modifie ton ticket.":"Le module PDF n'a pas pu se charger. Vérifie ta connexion internet puis recharge la page.";
+  }
+  b.disabled=false;b.textContent='Enregistrer mon PDF';
+}
+/* Le PDF est préparé dès l'aperçu : ainsi le menu de partage de l'iPhone s'ouvre immédiatement au toucher du bouton. */
+let pdfJob=null;
+function prepPdf(){
+  pdfJob=makePdf().then(({doc,name})=>({name,file:new File([doc.output('blob')],name,{type:'application/pdf'})}));
+  pdfJob.catch(()=>{});
+}
+$('#dl').onclick=()=>run(async()=>{
+  const r=await(pdfJob||(prepPdf(),pdfJob));
+  if(navigator.canShare&&navigator.canShare({files:[r.file]})){
+    try{await navigator.share({files:[r.file],title:r.name});$('#pdfOk').textContent='Si tu as choisi « Enregistrer dans Fichiers », ton PDF est dans le dossier que tu as sélectionné.';return}
+    catch(e){if(e&&e.name==='AbortError')return}
+  }
+  const u=URL.createObjectURL(r.file),a=document.createElement('a');
+  a.href=u;a.download=r.name;document.body.appendChild(a);a.click();a.remove();
+  setTimeout(()=>URL.revokeObjectURL(u),60000);
+  $('#pdfOk').textContent='PDF téléchargé : '+r.name+'. Cherche-le dans Fichiers, dossier Téléchargements.';
+});
+$('#reset').onclick=()=>{
+  if(!confirm('Recommencer un nouveau ticket ? Les informations saisies seront effacées.'))return;
+  S.img=null;S.ticket=null;S.number=newNum();$('#num').textContent=S.number;
+  ['title','time','cinema','comment','file'].forEach(i=>$('#'+i).value='');
+  $('#date').value=today();$('#phrase').value='Un souvenir de plus à garder précieusement.';
+  $('#cc').textContent=0;setR(0);$('#bri').value=0;$('#con').value=0;$('#crop').hidden=true;
+  $('#titleErr').textContent=$('#dateErr').textContent=$('#photoErr').textContent=$('#photoOk').textContent='';
+  show('home');
+};
+</script>
+</body>
+</html>
